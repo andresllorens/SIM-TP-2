@@ -2,6 +2,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import tkinter as tk
+from tkinter import ttk
 
 #Funcion para generar un numero aleatorio entre 0 y 1
 def generador_nro_rnd():
@@ -49,6 +51,10 @@ def generador_histograma_uniforme(k, datos):
     lower_limits = bins[:-1]
     upper_limits = bins[1:]
 
+     # Calcular las frecuencias
+    frecuencias = {f"{round(lower, 4)} - {round(upper, 4)}": frecuencia for lower, upper, frecuencia in zip(lower_limits, upper_limits, n)}
+
+
     # Agregar etiquetas y título
     plt.xlabel('Valor')
     plt.ylabel('Frecuencia')
@@ -62,10 +68,22 @@ def generador_histograma_uniforme(k, datos):
     
     # Mostrar el histograma
     plt.show()
+
+    return frecuencias
     
 
+def mostrar_tabla_frecuencias(frecuencias):
+    ventana_tabla = tk.Toplevel()
+    ventana_tabla.title("Tabla de Frecuencias")
 
+    tabla_frame = ttk.Frame(ventana_tabla)
+    tabla_frame.pack(padx=10, pady=10)
 
+    tabla = ttk.Treeview(tabla_frame, columns=('Intervalo', 'Frecuencia'), show='headings')
+    tabla.heading('Intervalo', text='Intervalo')
+    tabla.heading('Frecuencia', text='Frecuencia')
 
+    for intervalo, frecuencia in frecuencias.items():
+        tabla.insert('', 'end', values=(intervalo, frecuencia))
 
-
+    tabla.pack()

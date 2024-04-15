@@ -5,6 +5,7 @@ from back import generador_uniforme_a_b
 from back import generador_histograma_uniforme
 from back import generador_exponencial
 from back import generador_normal
+from back import mostrar_tabla_frecuencias
 
 def mostrar_campos(opcion_seleccionada, ventana_principal):
     ventana_datos = tk.Toplevel(ventana_principal)
@@ -137,7 +138,8 @@ def mostrar_ventana_histograma(numeros_generados):
 
     def generar_histograma():
         intervalos = int(seleccion_intervalos.get())
-        generador_histograma_uniforme(intervalos, numeros_generados)
+        frecuencias_uniformes = generador_histograma_uniforme(intervalos, numeros_generados)
+        mostrar_tabla_frecuencias(frecuencias_uniformes)
 
     boton_generar = tk.Button(ventana_histograma, text="Generar", command=generar_histograma)
     boton_generar.grid(row=0, column=2, padx=10, pady=10)
