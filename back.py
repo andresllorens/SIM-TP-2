@@ -5,6 +5,23 @@ import math
 import tkinter as tk
 from tkinter import ttk
 
+class Frecuencia:
+    def __init__(self, limite_inferior, limite_superior, frecuencia_observada, frecuencia_esperada):
+        self.limite_inferior = round(float(limite_inferior), 4)
+        self.limite_superior = round(float(limite_superior), 4)
+        self.frecuencia_observada = round(float(frecuencia_observada), 4)
+        self.frecuencia_esperada = round(float(frecuencia_esperada), 4)
+    def __str__(self):
+        return f"Límite Inferior: {self.limite_inferior:.4f}, " \
+               f"Límite Superior: {self.limite_superior:.4f}, " \
+               f"Frecuencia Observada: {self.frecuencia_observada:.4f}, " \
+               f"Frecuencia Esperada: {self.frecuencia_esperada:.4f}"
+
+
+def distribucion_exponencial_negativa(x, lambdaE):
+    """ Función para evaluar la distribución exponencial negativa en un punto x con parámetro lambdaE """
+    return lambdaE * math.exp(-lambdaE * x)
+
 #Funcion para generar un numero aleatorio entre 0 y 1
 def generador_nro_rnd():
     nro_rnd = round(random.random(),4)
@@ -40,8 +57,7 @@ def generador_normal(cantidad, media, desviacion):
 
 
 
-def generador_histograma_uniforme(k, datos):
-    # Crear el histograma
+def generador_histograma_uniforme(k, datos, opcion_seleccionada, lambd=None):
     n, bins, _ = plt.hist(datos, bins=k, color='blue', edgecolor='black')
 
     # Calcular el ancho de cada intervalo
@@ -51,8 +67,26 @@ def generador_histograma_uniforme(k, datos):
     lower_limits = bins[:-1]
     upper_limits = bins[1:]
 
-     # Calcular las frecuencias
-    frecuencias = {f"{round(lower, 4)} - {round(upper, 4)}": frecuencia for lower, upper, frecuencia in zip(lower_limits, upper_limits, n)}
+    # Crear una lista para almacenar objetos Frecuencia
+    frecuencias = []
+    # Iterar sobre los intervalos y frecuencias observadas
+    for lower, upper, frecuencia_obs in zip(lower_limits, upper_limits, n):
+        if(opcion_seleccionada == "Uniforme"):
+            frecuencia_esperada = len(datos)/k
+        elif(opcion_seleccionada == "Exponencial"):
+            exp_negativa_LS = distribucion_exponencial_negativa(upper, lambd)
+            exp_negativa_LI = distribucion_exponencial_negativa(lower, lambd)
+            frecuencia_esperada = abs((exp_negativa_LS - exp_negativa_LI) * len(datos))
+        
+        #Crear una instancia de Frecuencia con frecuencia observada y frecuencia esperada inicializada a 0
+        frecuencia_obj = Frecuencia(lower, upper, frecuencia_obs, frecuencia_esperada)
+        print('intervalo: ')
+        print(lower)
+        print(upper)
+        print(frecuencia_obs)
+        print(frecuencia_esperada)
+        # Agregar la instancia a la lista de frecuencias
+        frecuencias.append(frecuencia_obj)
 
 
     # Agregar etiquetas y título
@@ -79,11 +113,17 @@ def mostrar_tabla_frecuencias(frecuencias):
     tabla_frame = ttk.Frame(ventana_tabla)
     tabla_frame.pack(padx=10, pady=10)
 
-    tabla = ttk.Treeview(tabla_frame, columns=('Intervalo', 'Frecuencia'), show='headings')
-    tabla.heading('Intervalo', text='Intervalo')
-    tabla.heading('Frecuencia', text='Frecuencia')
+    tabla = ttk.Treeview(tabla_frame, columns=('Límite Inferior', 'Límite Superior', 'Frecuencia Observada', 'Frecuencia Esperada'), show='headings')
+    tabla.heading('Límite Inferior', text='Límite Inferior')
+    tabla.heading('Límite Superior', text='Límite Superior')
+    tabla.heading('Frecuencia Observada', text='Frecuencia Observada')
+    tabla.heading('Frecuencia Esperada', text='Frecuencia Esperada')
 
-    for intervalo, frecuencia in frecuencias.items():
-        tabla.insert('', 'end', values=(intervalo, frecuencia))
+    for frecuencia in frecuencias:
+        limite_inf = frecuencia.limite_inferior
+        limite_sup = frecuencia.limite_superior
+        frec_obs = frecuencia.frecuencia_observada
+        frec_esp = frecuencia.frecuencia_esperada
+        tabla.insert('', 'end', values=(limite_inf, limite_sup, frec_obs, frec_esp))
 
     tabla.pack()

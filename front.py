@@ -57,6 +57,8 @@ def mostrar_campos(opcion_seleccionada, ventana_principal):
         entrada_lambda.grid(row=1, column=1, padx=10, pady=5)
 
         def generar_exponencial():
+            global lambd
+            lambd = None
             try:
                 cantidad = int(entrada_cantidad.get())
                 lambd = float(entrada_lambda.get())
@@ -109,6 +111,7 @@ def mostrar_campos(opcion_seleccionada, ventana_principal):
         boton_generar.grid(row=3, columnspan=2, padx=10, pady=10)
 
 def mostrar_ventana_datos():
+    global opcion_seleccionada
     opcion_seleccionada = seleccion.get()
     mostrar_campos(opcion_seleccionada, ventana_principal)
 
@@ -138,7 +141,7 @@ def mostrar_ventana_histograma(numeros_generados):
 
     def generar_histograma():
         intervalos = int(seleccion_intervalos.get())
-        frecuencias_uniformes = generador_histograma_uniforme(intervalos, numeros_generados)
+        frecuencias_uniformes = generador_histograma_uniforme(intervalos, numeros_generados, opcion_seleccionada, lambd)
         mostrar_tabla_frecuencias(frecuencias_uniformes)
 
     boton_generar = tk.Button(ventana_histograma, text="Generar", command=generar_histograma)
