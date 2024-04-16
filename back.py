@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import math
 import tkinter as tk
 from tkinter import ttk
+from scipy.stats import norm
 
 class Frecuencia:
     def __init__(self, limite_inferior, limite_superior, frecuencia_observada, frecuencia_esperada):
@@ -35,20 +36,15 @@ def generador_uniforme_a_b(cantidad, a, b):
 
 # Función para generar números aleatorios utilizando la distribución exponencial
 def generador_exponencial(cantidad, lambd):
-    numeros_generados = []
-    for _ in range(cantidad):
-        # Generar un número aleatorio entre 0 y 1
-        rnd = random.random()
-        # Aplicar la inversa de la función de distribución acumulativa exponencial
-        numero_generado = -math.log(1 - rnd) / lambd
-        numeros_generados.append(numero_generado)
+    numeros_generados = [round(-math.log(1 - generador_nro_rnd()) / lambd,4) for _ in range(cantidad)]
     return numeros_generados
 
+# Función para generar números aleatorios utilizando la distribución normal
 def generador_normal(cantidad, media, desviacion):
     numeros_generados = []
     for _ in range(cantidad):
-        u1 = random.random()
-        u2 = random.random()
+        u1 = generador_nro_rnd()
+        u2 = generador_nro_rnd()
         z1 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
         z2 = math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)
         numero_generado = z1 * desviacion + media
@@ -57,7 +53,7 @@ def generador_normal(cantidad, media, desviacion):
 
 
 
-def generador_histograma_uniforme(k, datos, opcion_seleccionada, lambd=None):
+def generador_histograma(k, datos, opcion_seleccionada, lambd=None, media=None, desviacion=None):
     n, bins, _ = plt.hist(datos, bins=k, color='blue', edgecolor='black')
 
     # Calcular el ancho de cada intervalo
@@ -77,6 +73,16 @@ def generador_histograma_uniforme(k, datos, opcion_seleccionada, lambd=None):
             exp_negativa_LS = distribucion_exponencial_negativa(upper, lambd)
             exp_negativa_LI = distribucion_exponencial_negativa(lower, lambd)
             frecuencia_esperada = abs((exp_negativa_LS - exp_negativa_LI) * len(datos))
+        else:
+            if media is None or desviacion is None:
+                raise ValueError("Para calcular la frecuencia esperada para una distribución normal, se requiere la media y la desviación estándar.")
+            
+            # Calcular la probabilidad acumulativa hasta los límites superior e inferior
+            prob_inf = norm.cdf(lower, loc=media, scale=desviacion)
+            prob_sup = norm.cdf(upper, loc=media, scale=desviacion)
+            
+            # Calcular la frecuencia esperada multiplicando por el total de datos generados
+            frecuencia_esperada = (prob_sup - prob_inf) * len(datos)
         
         #Crear una instancia de Frecuencia con frecuencia observada y frecuencia esperada inicializada a 0
         frecuencia_obj = Frecuencia(lower, upper, frecuencia_obs, frecuencia_esperada)
@@ -92,7 +98,7 @@ def generador_histograma_uniforme(k, datos, opcion_seleccionada, lambd=None):
     # Agregar etiquetas y título
     plt.xlabel('Valor')
     plt.ylabel('Frecuencia')
-    plt.suptitle('Histograma de Distribución Uniforme')
+    plt.suptitle('Histograma de Distribución ' + opcion_seleccionada)
     # Agregar la amplitud justo debajo del título
     plt.title(f"Amplitud: {round(bin_width,4)}")
     
@@ -127,3 +133,4 @@ def mostrar_tabla_frecuencias(frecuencias):
         tabla.insert('', 'end', values=(limite_inf, limite_sup, frec_obs, frec_esp))
 
     tabla.pack()
+    

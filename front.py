@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from back import generador_uniforme_a_b
-from back import generador_histograma_uniforme
+from back import generador_histograma
 from back import generador_exponencial
 from back import generador_normal
 from back import mostrar_tabla_frecuencias
@@ -94,6 +94,8 @@ def mostrar_campos(opcion_seleccionada, ventana_principal):
 
         def generar_normal():
             try:
+                global media
+                global desviacion 
                 cantidad = int(entrada_cantidad.get())
                 media = float(entrada_media.get())
                 desviacion = float(entrada_desviacion.get())
@@ -126,22 +128,27 @@ def mostrar_resultados(numeros_generados):
         texto_resultado = f"{i}:    {numero}"
         lista_numeros.insert(tk.END, texto_resultado)
 
-    boton_histograma = tk.Button(ventana_resultados, text="Generar Histograma", command=lambda: mostrar_ventana_histograma(numeros_generados))
+    boton_histograma = tk.Button(ventana_resultados, text="Generar Histograma", command=lambda: ventana_intervalos(numeros_generados))
     boton_histograma.pack(padx=10, pady=10)
 
-def mostrar_ventana_histograma(numeros_generados):
+def ventana_intervalos(numeros_generados):
     ventana_histograma = tk.Toplevel(ventana_principal)
     ventana_histograma.title("Generar Histograma")
 
     etiqueta_intervalos = tk.Label(ventana_histograma, text="Cantidad intervalos:")
     etiqueta_intervalos.grid(row=0, column=0, padx=10, pady=10, sticky="w") 
     opciones_intervalos = [10, 15, 20, 25]
-    seleccion_intervalos = ttk.Combobox(ventana_histograma, values=opciones_intervalos)
+    seleccion_intervalos = ttk.Combobox(ventana_histograma, values=opciones_intervalos, state='readonly')
     seleccion_intervalos.grid(row=0, column=1, padx=10, pady=10)
 
     def generar_histograma():
         intervalos = int(seleccion_intervalos.get())
-        frecuencias_uniformes = generador_histograma_uniforme(intervalos, numeros_generados, opcion_seleccionada, lambd)
+        if opcion_seleccionada == 'Exponencial':
+            frecuencias_uniformes = generador_histograma(intervalos, numeros_generados, opcion_seleccionada, lambd)
+        elif opcion_seleccionada == 'Normal':
+            frecuencias_uniformes = generador_histograma(intervalos, numeros_generados, opcion_seleccionada, None, media, desviacion)
+        else:
+            frecuencias_uniformes = generador_histograma(intervalos, numeros_generados, opcion_seleccionada)
         mostrar_tabla_frecuencias(frecuencias_uniformes)
 
     boton_generar = tk.Button(ventana_histograma, text="Generar", command=generar_histograma)
@@ -153,7 +160,7 @@ ventana_principal.title("Generador de números aleatorios")
 etiqueta_distribucion = tk.Label(ventana_principal, text="Distribución:")
 etiqueta_distribucion.grid(row=0, column=0, padx=10, pady=10, sticky="w")
 opciones = ["Uniforme", "Exponencial", "Normal"]
-seleccion = ttk.Combobox(ventana_principal, values=opciones)
+seleccion = ttk.Combobox(ventana_principal, values=opciones, state='readonly')
 seleccion.grid(row=0, column=1, padx=10, pady=10)
 
 boton_siguiente = tk.Button(ventana_principal, text="Siguiente", command=mostrar_ventana_datos)
