@@ -63,13 +63,16 @@ def generador_normal(cantidad, media, desviacion):
 
 
 def generador_histograma(k, datos, opcion_seleccionada, lambd=None, media=None, desviacion=None):
+    #n array de frecuencias observadas
     n, bins, _ = plt.hist(datos, bins=k, color='blue', edgecolor='black')
 
     # Calcular el ancho de cada intervalo
     bin_width = bins[1] - bins[0]
 
     # Calcular los límites inferiores y superiores de cada intervalo
+    #Vector con los limites inferiores
     lower_limits = bins[:-1]
+    #Vector con los limites superiores
     upper_limits = bins[1:]
     
     # Agregar etiquetas y título
@@ -132,6 +135,8 @@ def generador_histograma(k, datos, opcion_seleccionada, lambd=None, media=None, 
 
         frecuencia_obj = Frecuencia(lower, upper, frecuencia_obs, frecuencia_esperada)
         frecuencias.append(frecuencia_obj)
+        
+        
 
         i += 1
     return frecuencias
