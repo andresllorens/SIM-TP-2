@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-from back import generador_uniforme_a_b
+from back import generador_uniforme_a_b, calcular_chi_cuadrado
 from back import generador_histograma
 from back import generador_exponencial
 from back import generador_normal
 from back import mostrar_tabla_frecuencias
+
+
 
 def mostrar_campos(opcion_seleccionada, ventana_principal):
     ventana_datos = tk.Toplevel(ventana_principal)
@@ -57,9 +59,8 @@ def mostrar_campos(opcion_seleccionada, ventana_principal):
         entrada_lambda.grid(row=1, column=1, padx=10, pady=5)
 
         def generar_exponencial():
-            global lambd
-            lambd = None
-            try:
+                global lambd
+                lambd = None
                 cantidad = int(entrada_cantidad.get())
                 lambd = float(entrada_lambda.get())
                 if cantidad <= 0 or cantidad > 1000000:
@@ -70,8 +71,6 @@ def mostrar_campos(opcion_seleccionada, ventana_principal):
                     # Llama a la función generador_exponencial y muestra los datos en una nueva ventana
                     numeros_generados = generador_exponencial(cantidad, lambd)
                     mostrar_resultados(numeros_generados)
-            except ValueError:
-                messagebox.showerror("Error", "Por favor, ingrese números válidos")
 
         boton_generar = tk.Button(ventana_datos, text="Generar", command=generar_exponencial)
         boton_generar.grid(row=3, columnspan=2, padx=10, pady=10)
@@ -151,8 +150,18 @@ def ventana_intervalos(numeros_generados):
             frecuencias_uniformes = generador_histograma(intervalos, numeros_generados, opcion_seleccionada)
         mostrar_tabla_frecuencias(frecuencias_uniformes)
 
+        # Agregar botón para la Prueba Chi Cuadrado
+        boton_prueba_chi_cuadrado = tk.Button(ventana_histograma, text="Prueba Chi Cuadrado", command=lambda: realizar_prueba_chi_cuadrado(frecuencias_uniformes))
+        boton_prueba_chi_cuadrado.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+
     boton_generar = tk.Button(ventana_histograma, text="Generar", command=generar_histograma)
     boton_generar.grid(row=0, column=2, padx=10, pady=10)
+
+    
+#Tabla que muestra el chi calculado
+def realizar_prueba_chi_cuadrado(frecuencias):
+    chi_cuadrado = calcular_chi_cuadrado(frecuencias)
+    messagebox.showinfo("Resultado Prueba Chi Cuadrado", f"El Ji Cuadrado calculado  es: {chi_cuadrado}")
 
 ventana_principal = tk.Tk()
 ventana_principal.title("Generador de números aleatorios")

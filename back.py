@@ -5,6 +5,7 @@ import math
 import tkinter as tk
 from tkinter import ttk
 from scipy.stats import norm
+from tkinter import messagebox
 
 class Frecuencia:
     def __init__(self, limite_inferior, limite_superior, frecuencia_observada, frecuencia_esperada):
@@ -25,7 +26,7 @@ def distribucion_exponencial_negativa(x, lambdaE):
 
 #Funcion para generar un numero aleatorio entre 0 y 1
 def generador_nro_rnd():
-    nro_rnd = round(random.random(),4)
+    nro_rnd = random.random()
     return nro_rnd
 
 #Funcion para generar x cantidad de numeros aleatoreos entre a y b utilizando el generador de numeros rnd
@@ -39,16 +40,24 @@ def generador_exponencial(cantidad, lambd):
     numeros_generados = [round(-math.log(1 - generador_nro_rnd()) / lambd,4) for _ in range(cantidad)]
     return numeros_generados
 
-# Función para generar números aleatorios utilizando la distribución normal
 def generador_normal(cantidad, media, desviacion):
     numeros_generados = []
-    for _ in range(cantidad):
-        u1 = generador_nro_rnd()
-        u2 = generador_nro_rnd()
+    while len(numeros_generados) < cantidad:
+        # Generar dos números aleatorios u1 y u2 en el rango (0, 1)
+        u1 = 1 - generador_nro_rnd()  # Asegúrate de generar números en el rango (0, 1)
+        u2 = 1 - generador_nro_rnd()
+        
+        # Calcular z1 y z2 usando la transformación de Box-Muller
         z1 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
         z2 = math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)
-        numero_generado = z1 * desviacion + media
-        numeros_generados.append(numero_generado)
+        
+        # Agregar los números generados ajustados a la media y desviación estándar
+        numeros_generados.append(round(media + desviacion * z1, 4))
+        
+        # Solo agregar z2 si no se ha alcanzado la cantidad deseada
+        if len(numeros_generados) < cantidad:
+            numeros_generados.append(round(media + desviacion * z2, 4))
+    
     return numeros_generados
 
 
@@ -62,46 +71,13 @@ def generador_histograma(k, datos, opcion_seleccionada, lambd=None, media=None, 
     # Calcular los límites inferiores y superiores de cada intervalo
     lower_limits = bins[:-1]
     upper_limits = bins[1:]
-
-    # Crear una lista para almacenar objetos Frecuencia
-    frecuencias = []
-    # Iterar sobre los intervalos y frecuencias observadas
-    for lower, upper, frecuencia_obs in zip(lower_limits, upper_limits, n):
-        if(opcion_seleccionada == "Uniforme"):
-            frecuencia_esperada = len(datos)/k
-        elif(opcion_seleccionada == "Exponencial"):
-            exp_negativa_LS = distribucion_exponencial_negativa(upper, lambd)
-            exp_negativa_LI = distribucion_exponencial_negativa(lower, lambd)
-            frecuencia_esperada = abs((exp_negativa_LS - exp_negativa_LI) * len(datos))
-        else:
-            if media is None or desviacion is None:
-                raise ValueError("Para calcular la frecuencia esperada para una distribución normal, se requiere la media y la desviación estándar.")
-            
-            # Calcular la probabilidad acumulativa hasta los límites superior e inferior
-            prob_inf = norm.cdf(lower, loc=media, scale=desviacion)
-            prob_sup = norm.cdf(upper, loc=media, scale=desviacion)
-            
-            # Calcular la frecuencia esperada multiplicando por el total de datos generados
-            frecuencia_esperada = (prob_sup - prob_inf) * len(datos)
-        
-        #Crear una instancia de Frecuencia con frecuencia observada y frecuencia esperada inicializada a 0
-        frecuencia_obj = Frecuencia(lower, upper, frecuencia_obs, frecuencia_esperada)
-        print('intervalo: ')
-        print(lower)
-        print(upper)
-        print(frecuencia_obs)
-        print(frecuencia_esperada)
-        # Agregar la instancia a la lista de frecuencias
-        frecuencias.append(frecuencia_obj)
-
-
+    
     # Agregar etiquetas y título
     plt.xlabel('Valor')
     plt.ylabel('Frecuencia')
     plt.suptitle('Histograma de Distribución ' + opcion_seleccionada)
     # Agregar la amplitud justo debajo del título
-    plt.title(f"Amplitud: {round(bin_width,4)}")
-    
+    plt.title(f"Amplitud: {round(bin_width,4)}")    
 
     # Establecer las marcas y etiquetas del eje x con los límites inferiores y superiores
     plt.xticks(np.arange(lower_limits.min(), upper_limits.max() + bin_width, bin_width), rotation=45)
@@ -109,6 +85,55 @@ def generador_histograma(k, datos, opcion_seleccionada, lambd=None, media=None, 
     # Mostrar el histograma
     plt.show()
 
+    # Crear una lista para almacenar objetos Frecuencia
+    frecuencias = []
+
+    i = 0
+    #Va iterando por cada intervalo
+    while i < len(n):
+        # Da los límites y la frecuencia observada del intervalo actual
+        lower = lower_limits[i]
+        upper = upper_limits[i]
+        frecuencia_obs = n[i]
+
+        # Calcula la frecuencia esperada según la distribución que tiene
+        if opcion_seleccionada == "Uniforme":
+            frecuencia_esperada = len(datos) / k
+
+        elif opcion_seleccionada == "Exponencial":
+            exp_negativa_LS = distribucion_exponencial_negativa(upper, lambd)
+            exp_negativa_LI = distribucion_exponencial_negativa(lower, lambd)
+            frecuencia_esperada = abs((exp_negativa_LS - exp_negativa_LI) * len(datos))
+
+        elif opcion_seleccionada == 'Normal':
+            if media is None or desviacion is None:
+                raise ValueError("Para calcular la frecuencia esperada para una distribución normal, se requiere la media y la desviación estándar.")
+
+            # Calcular la probabilidad acumulativa hasta los límites superior e inferior
+            prob_inf = norm.cdf(lower, loc=media, scale=desviacion)
+            prob_sup = norm.cdf(upper, loc=media, scale=desviacion)
+
+            # Calcular la frecuencia esperada multiplicando por el total de datos generados
+            frecuencia_esperada = (prob_sup - prob_inf) * len(datos)
+
+        # Si la frecuencia esperada es menor a 5, fusionar con el intervalo siguiente
+        while frecuencia_esperada < 5 and i < len(n) - 1:
+            i += 1
+            upper = upper_limits[i]
+            frecuencia_obs += n[i]
+
+            if opcion_seleccionada == "Exponencial":
+                exp_negativa_LS = distribucion_exponencial_negativa(upper, lambd)
+                exp_negativa_LI = distribucion_exponencial_negativa(lower, lambd)
+                frecuencia_esperada = abs((exp_negativa_LS - exp_negativa_LI) * len(datos))
+            elif opcion_seleccionada == 'Normal':
+                prob_sup = norm.cdf(upper, loc=media, scale=desviacion)
+                frecuencia_esperada = (prob_sup - prob_inf) * len(datos)
+
+        frecuencia_obj = Frecuencia(lower, upper, frecuencia_obs, frecuencia_esperada)
+        frecuencias.append(frecuencia_obj)
+
+        i += 1
     return frecuencias
     
 
@@ -133,4 +158,36 @@ def mostrar_tabla_frecuencias(frecuencias):
         tabla.insert('', 'end', values=(limite_inf, limite_sup, frec_obs, frec_esp))
 
     tabla.pack()
-    
+
+    # Verificar si alguna frecuencia esperada es menor a 5
+    frecuencias_bajas = [f for f in frecuencias if f.frecuencia_esperada < 5]
+    if frecuencias_bajas:
+        #Agrupa los intervalos menores a 5
+        fusionar_intervalos(frecuencias_bajas, tabla, frecuencias)
+
+
+
+def fusionar_intervalos(frecuencias_bajas, tabla, frecuencias):
+    # Fusión de intervalos
+    for f in frecuencias_bajas:
+        indice = frecuencias.index(f)
+        if indice > 0:
+            frecuencia_anterior = frecuencias[indice - 1]
+            frecuencia_anterior.limite_superior = f.limite_superior
+            frecuencia_anterior.frecuencia_observada += f.frecuencia_observada
+            frecuencia_anterior.frecuencia_esperada += f.frecuencia_esperada
+            # Eliminar la frecuencia actual
+            frecuencias.remove(f)
+
+    # Actualizar la tabla de frecuencias
+    tabla.delete(*tabla.get_children())  # Limpiar la tabla actual
+    for frecuencia in frecuencias:
+        tabla.insert('', 'end', values=(frecuencia.limite_inferior, frecuencia.limite_superior, frecuencia.frecuencia_observada, frecuencia.frecuencia_esperada))
+
+def calcular_chi_cuadrado(frecuencias):
+    chi_cuadrado = 0
+    for frecuencia in frecuencias:
+        # Calcula el término del estadístico de Ji Cuadrado para cada intervalo
+        chi_cuadrado += ((frecuencia.frecuencia_observada - frecuencia.frecuencia_esperada) ** 2) / frecuencia.frecuencia_esperada
+    return round(chi_cuadrado, 4)
+
